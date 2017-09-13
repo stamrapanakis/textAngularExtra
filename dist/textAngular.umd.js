@@ -119,7 +119,7 @@ angular.module('textAngularSetup', [])
         ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'pre', 'quote'],
         ['bold', 'italics', 'underline', 'strikeThrough', 'ul', 'ol', 'redo', 'undo', 'clear'],
         ['justifyLeft','justifyCenter','justifyRight','justifyFull','indent','outdent'],
-        ['html', 'insertImage', 'insertLink', 'insertVideo', 'wordcount', 'charcount']
+        ['html', 'insertImage', 'insertLink','selectContent', 'insertVideo', 'wordcount', 'charcount']
     ],
     classes: {
         focussed: "focussed",
@@ -261,6 +261,10 @@ angular.module('textAngularSetup', [])
     insertVideo: {
         tooltip: 'Insert video',
         dialogPrompt: 'Please enter a youtube URL to embed'
+    },
+    selectContent: {
+        tooltip: 'Select content',
+        dialogPrompt: "Please select content"
     },
     insertLink: {
         tooltip: 'Insert / edit link',
@@ -950,6 +954,35 @@ angular.module('textAngularSetup', [])
             onlyWithAttrs: ['ta-insert-video'],
             action: taToolFunctions.imgOnSelectAction
         }
+    });
+    taRegisterTool('selectContent', {
+            tooltiptext: taTranslations.selectContent.tooltip,
+            iconclass: 'fa fa-adjust',
+            action: function(){
+                    var urlLink;
+                    // if this link has already been set, we need to just edit the existing link
+                    /* istanbul ignore if: we do not test this */
+                    if (taSelection.getSelectionElement().tagName && taSelection.getSelectionElement().tagName.toLowerCase() === 'a') {
+                            urlLink = $window.prompt(taTranslations.selectContent.dialogPrompt, taSelection.getSelectionElement().href);
+                    } else {
+                            urlLink = $window.prompt(taTranslations.selectContent.dialogPrompt, 'http://');
+                    }
+                    if(urlLink && urlLink !== '' && urlLink !== 'http://'){
+                            // block javascript here
+                            /* istanbul ignore else: if it's javascript don't worry - though probably should show some kind of error message */
+                            if (!blockJavascript(urlLink)) {
+                                    return this.$editor().wrapSelection('createLink', urlLink, true);
+                            }
+                    }
+            },
+            activeState: function(commonElement){
+                    if(commonElement) return commonElement[0].tagName === 'A';
+                    return false;
+            },
+            onElementSelect: {
+                    element: 'a',
+                    action: taToolFunctions.aOnSelectAction
+            }
     });
     taRegisterTool('insertLink', {
         tooltiptext: taTranslations.insertLink.tooltip,
